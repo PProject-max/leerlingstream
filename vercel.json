@@ -1,0 +1,10 @@
+
+{
+  "routes": [
+    {
+      "src": "/view",
+      "methods": ["GET"],
+      "dest": "/api/view.js"
+    }
+  ]
+}
