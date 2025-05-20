@@ -1,20 +1,21 @@
-// Simpele geheugenopslag (reset bij elke Vercel deploy)
+const { google } = require("googleapis");
+
 const tokens = {
   "abc123": {
-    email: "leerling1@example.com",
+    email: "leerling1@school.nl",
     created: "2025-05-20",
-    uses: [], // hier komen IP-adressen
+    uses: [],
     maxUses: 3
   },
   "def456": {
-    email: "leerling2@example.com",
+    email: "leerling2@school.nl",
     created: "2025-05-20",
     uses: [],
     maxUses: 3
   }
 };
 
-module.exports = (req, res) => {
+module.exports = async (req, res) => {
   const token = req.query.token;
   const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
   const timestamp = new Date().toISOString();
@@ -23,26 +24,36 @@ module.exports = (req, res) => {
     return res.status(400).send("Ongeldig of ontbrekend token.");
   }
 
-  const tokenData = tokens[token];
-  const createdDate = new Date(tokenData.created);
-  const now = new Date();
-  const daysSince = (now - createdDate) / (1000 * 60 * 60 * 24);
+  const data = tokens[token];
+  const age = (new Date() - new Date(data.created)) / (1000 * 60 * 60 * 24);
+  if (age > 7) return res.status(403).send("Deze link is verlopen.");
 
-  if (daysSince > 7) {
-    return res.status(403).send("Deze link is verlopen.");
+  if (!data.uses.includes(ip)) {
+    data.uses.push(ip);
   }
 
-  if (!tokenData.uses.includes(ip)) {
-    tokenData.uses.push(ip);
-  }
-
-  if (tokenData.uses.length > tokenData.maxUses) {
+  if (data.uses.length > data.maxUses) {
     return res.status(403).send("Maximaal aantal apparaten overschreden.");
   }
 
-  console.log("TOEGANG:", { token, email: tokenData.email, ip, timestamp });
+  // 🟢 Loggen naar Google Sheets
+  const auth = new google.auth.GoogleAuth({
+    credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT),
+    scopes: ["https://www.googleapis.com/auth/spreadsheets"]
+  });
+
+  const sheets = google.sheets({ version: "v4", auth });
+
+  await sheets.spreadsheets.values.append({
+    spreadsheetId: "1PIuVOTWIleJcADwjMpOXWMBG342LQoLNfIhISbZX6qY",
+    range: "Sheet1!A:D",
+    valueInputOption: "RAW",
+    requestBody: {
+      values: [[token, data.email, ip, timestamp]]
+    }
+  });
+
+  console.log("TOEGANG:", { token, ip, timestamp });
 
   return res.writeHead(302, {
-    Location: "https://iframe.videodelivery.net/aba37fd842136c39cfea52786d8c1545"
-  }).end();
-};
+    Location
