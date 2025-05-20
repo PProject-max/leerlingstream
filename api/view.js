@@ -28,4 +28,26 @@ module.exports = async (req, res) => {
   const sheets = google.sheets({ version: 'v4', auth });
 
   // Sheet-ID van jouw werkende Google Sheet
-  const spreadsheetId
+  const spreadsheetId = '1PIuVOTWIleJcADwjMpOXWMBG342LQoLNfIhISbZX6qY';
+  const sheetName = 'Blad1'; // of pas aan naar jouw tabbladnaam
+
+  try {
+    await sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range: `${sheetName}!A1:D1`,
+      valueInputOption: 'RAW',
+      requestBody: {
+        values: [[timestamp, email, ip, token]],
+      },
+    });
+
+    // Succes → doorsturen naar je Cloudflare video
+    return res.writeHead(302, {
+      Location: "https://iframe.videodelivery.net/aba37fd842136c39cfea52786d8c1545",
+    }).end();
+
+  } catch (error) {
+    console.error("Google Sheets fout:", error);
+    return res.status(500).send("Er is iets misgegaan bij het loggen.");
+  }
+};
