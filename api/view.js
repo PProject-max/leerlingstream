@@ -1,3 +1,5 @@
+https://leerlingstream.vercel.app/view?token=abc123&email=naam@school.nl
+
 const crypto = require('crypto');
 
 const accessLog = {}; // Tijdelijk in geheugen
