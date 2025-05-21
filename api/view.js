@@ -45,8 +45,10 @@ module.exports = async (req, res) => {
       scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     });
 
-    const doc = new GoogleSpreadsheet(SHEET_ID, auth);
-    await doc.loadInfo();
+    const doc = new GoogleSpreadsheet(SHEET_ID);
+await doc.useAuthClient(auth);
+await doc.loadInfo();
+
     const sheet = doc.sheetsByIndex[0];
 
     await sheet.addRow({
