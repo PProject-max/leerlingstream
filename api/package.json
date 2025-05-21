@@ -1,0 +1,10 @@
+{
+  "name": "leerlingstream",
+  "version": "1.0.0",
+  "main": "view.js",
+  "type": "commonjs",
+  "dependencies": {
+    "google-spreadsheet": "^3.3.0",
+    "google-auth-library": "^8.7.0"
+  }
+}
