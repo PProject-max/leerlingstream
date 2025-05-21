@@ -38,28 +38,26 @@ module.exports = async (req, res) => {
   }
 
   // Google Sheets loggen
-  try {
-    const auth = new JWT({
-      email: serviceAccount.client_email,
-      key: serviceAccount.private_key,
-      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-    });
+try {
+  const doc = new GoogleSpreadsheet(SHEET_ID);
+  await doc.useServiceAccountAuth({
+    client_email: serviceAccount.client_email,
+    private_key: serviceAccount.private_key,
+  });
 
-    const doc = new GoogleSpreadsheet(SHEET_ID);
-await doc.useAuthClient(auth);
-await doc.loadInfo();
+  await doc.loadInfo();
+  const sheet = doc.sheetsByIndex[0];
 
-    const sheet = doc.sheetsByIndex[0];
+  await sheet.addRow({
+    timestamp: new Date().toISOString(),
+    email,
+    token,
+    ip,
+  });
+} catch (err) {
+  console.error('Fout bij loggen naar Google Sheets:', err);
+}
 
-    await sheet.addRow({
-      timestamp: new Date().toISOString(),
-      email,
-      token,
-      ip,
-    });
-  } catch (err) {
-    console.error('Fout bij loggen naar Google Sheets:', err);
-  }
 
   // Doorsturen naar video
   return res.writeHead(302, {
